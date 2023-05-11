@@ -2,11 +2,15 @@
   "name": "ng-apexcharts",
   "version": "1.7.7",
   "description": "An angular implementation of ApexCharts",
+  "type": "module",
+  "scripts": {
+    "build": "ng-packagr -p ng-package.json"
+  },
   "peerDependencies": {
-    "@angular/common": ">=13.0.0",
-    "@angular/core": ">=13.0.0",
-    "rxjs": "^6.5.3 || ^7.4.0",
-    "apexcharts": "^3.40.0"
+    "@angular/common": "16.0.1",
+    "@angular/core": "16.0.1",
+    "apexcharts": "^3.40.0",
+    "rxjs": "^7.8.1"
   },
   "keywords": [
     "angular",
@@ -24,10 +28,13 @@
   },
   "homepage": "https://github.com/apexcharts/ng-apexcharts",
   "dependencies": {
-    "tslib": "^2.0.0"
+    "tslib": "^2.5.0"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/apexcharts/ng-apexcharts.git"
+  },
+  "devDependencies": {
+    "ng-packagr": "^16.0.0"
   }
 }
