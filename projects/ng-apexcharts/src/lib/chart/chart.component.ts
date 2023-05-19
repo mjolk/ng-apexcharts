@@ -8,6 +8,7 @@ import {
   ViewChild,
   NgZone,
   ChangeDetectionStrategy,
+  AfterViewInit,
 } from "@angular/core";
 import {
   ApexAnnotations,
@@ -30,6 +31,7 @@ import {
   ApexXAxis,
   ApexYAxis,
   ApexForecastDataPoints,
+  ApexOptions,
 } from "../model/apex-types";
 import { asapScheduler } from "rxjs";
 
@@ -38,215 +40,97 @@ import ApexCharts from "apexcharts/dist/apexcharts.esm.js";
 @Component({
   selector: "apx-chart",
   template: `<div #chart></div>`,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ChartComponent implements OnChanges, OnDestroy {
-  @Input() chart: ApexChart;
-  @Input() annotations: ApexAnnotations;
-  @Input() colors: any[];
-  @Input() dataLabels: ApexDataLabels;
-  @Input() series: ApexAxisChartSeries | ApexNonAxisChartSeries;
-  @Input() stroke: ApexStroke;
-  @Input() labels: string[];
-  @Input() legend: ApexLegend;
-  @Input() markers: ApexMarkers;
-  @Input() noData: ApexNoData;
-  @Input() fill: ApexFill;
-  @Input() tooltip: ApexTooltip;
-  @Input() plotOptions: ApexPlotOptions;
-  @Input() responsive: ApexResponsive[];
-  @Input() xaxis: ApexXAxis;
-  @Input() yaxis: ApexYAxis | ApexYAxis[];
-  @Input() forecastDataPoints: ApexForecastDataPoints;
-  @Input() grid: ApexGrid;
-  @Input() states: ApexStates;
-  @Input() title: ApexTitleSubtitle;
-  @Input() subtitle: ApexTitleSubtitle;
-  @Input() theme: ApexTheme;
-
-  @Input() autoUpdateSeries = true;
-
-  @ViewChild("chart", { static: true }) private chartElement: ElementRef;
-  private chartObj: any;
-
-  constructor(private ngZone: NgZone) {
-
-  }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    asapScheduler.schedule(() => {
-      if (
-        this.autoUpdateSeries &&
-        Object.keys(changes).filter((c) => c !== "series").length === 0
-      ) {
-        this.updateSeries(this.series, true);
+export class ChartComponent implements OnDestroy, AfterViewInit {
+  @Input() set options(options: ApexOptions | null) {
+    if (!options) return;
+    this._options = options;
+    this.ngZone.runOutsideAngular(() => {
+      if (!this._chartObj) {
+        this._create();
         return;
       }
-
-      this.createElement();
+      this._chartObj.updateOptions(this._options, true, true, false);
     });
   }
+  get options(): ApexOptions | null {
+    return this._options;
+  }
+  private _options: ApexOptions | null = null;
+
+  @ViewChild("chart", { static: true }) private chartElement: ElementRef;
+  private _chartObj: any | null;
+
+  constructor(private ngZone: NgZone) {}
 
   ngOnDestroy() {
-    if (this.chartObj) {
-      this.chartObj.destroy();
+    if (this._chartObj) {
+      this._chartObj.destroy();
     }
   }
 
-  private createElement() {
-    const options: any = {};
-
-    if (this.annotations) {
-      options.annotations = this.annotations;
-    }
-    if (this.chart) {
-      options.chart = this.chart;
-    }
-    if (this.colors) {
-      options.colors = this.colors;
-    }
-    if (this.dataLabels) {
-      options.dataLabels = this.dataLabels;
-    }
-    if (this.series) {
-      options.series = this.series;
-    }
-    if (this.stroke) {
-      options.stroke = this.stroke;
-    }
-    if (this.labels) {
-      options.labels = this.labels;
-    }
-    if (this.legend) {
-      options.legend = this.legend;
-    }
-    if (this.fill) {
-      options.fill = this.fill;
-    }
-    if (this.tooltip) {
-      options.tooltip = this.tooltip;
-    }
-    if (this.plotOptions) {
-      options.plotOptions = this.plotOptions;
-    }
-    if (this.responsive) {
-      options.responsive = this.responsive;
-    }
-    if (this.markers) {
-      options.markers = this.markers;
-    }
-    if (this.noData) {
-      options.noData = this.noData;
-    }
-    if (this.xaxis) {
-      options.xaxis = this.xaxis;
-    }
-    if (this.yaxis) {
-      options.yaxis = this.yaxis;
-    }
-    if (this.forecastDataPoints) {
-      options.forecastDataPoints = this.forecastDataPoints;
-    }
-    if (this.grid) {
-      options.grid = this.grid;
-    }
-    if (this.states) {
-      options.states = this.states;
-    }
-    if (this.title) {
-      options.title = this.title;
-    }
-    if (this.subtitle) {
-      options.subtitle = this.subtitle;
-    }
-    if (this.theme) {
-      options.theme = this.theme;
+  ngAfterViewInit() {
+    if (this._chartObj) {
+      this._chartObj.destroy();
     }
 
-    if (this.chartObj) {
-      this.chartObj.destroy();
+    if (this._options) {
+      this.ngZone.runOutsideAngular(() => {
+        this._create();
+      });
     }
-
-    this.ngZone.runOutsideAngular(() => {
-      this.chartObj = new ApexCharts(this.chartElement.nativeElement, options);
-    });
-
-    this.render();
   }
 
-  public render(): Promise<void> {
-    return this.ngZone.runOutsideAngular(() => this.chartObj.render());
-  }
-
-  public updateOptions(
-    options: any,
-    redrawPaths?: boolean,
-    animate?: boolean,
-    updateSyncedCharts?: boolean
-  ): Promise<void> {
-    return this.ngZone.runOutsideAngular(() => this.chartObj.updateOptions(
-      options,
-      redrawPaths,
-      animate,
-      updateSyncedCharts
-    ));
-  }
-
-  public updateSeries(
-    newSeries: ApexAxisChartSeries | ApexNonAxisChartSeries,
-    animate?: boolean
-  ) {
-    return this.ngZone.runOutsideAngular(() => this.chartObj.updateSeries(newSeries, animate));
-  }
-
-  public appendSeries(
-    newSeries: ApexAxisChartSeries | ApexNonAxisChartSeries,
-    animate?: boolean
-  ) {
-    this.ngZone.runOutsideAngular(() => this.chartObj.appendSeries(newSeries, animate));
-  }
-
-  public appendData(newData: any[]) {
-    this.ngZone.runOutsideAngular(() => this.chartObj.appendData(newData));
+  private _create() {
+    this._chartObj = new ApexCharts(
+      this.chartElement.nativeElement,
+      this._options
+    );
+    this._chartObj.render();
   }
 
   public toggleSeries(seriesName: string): any {
-    return this.ngZone.runOutsideAngular(() => this.chartObj.toggleSeries(seriesName));
+    return this.ngZone.runOutsideAngular(() =>
+      this._chartObj.toggleSeries(seriesName)
+    );
   }
 
   public showSeries(seriesName: string) {
-    this.ngZone.runOutsideAngular(() => this.chartObj.showSeries(seriesName));
+    this.ngZone.runOutsideAngular(() => this._chartObj.showSeries(seriesName));
   }
 
   public hideSeries(seriesName: string) {
-    this.ngZone.runOutsideAngular(() => this.chartObj.hideSeries(seriesName));
+    this.ngZone.runOutsideAngular(() => this._chartObj.hideSeries(seriesName));
   }
 
   public resetSeries() {
-    this.ngZone.runOutsideAngular(() => this.chartObj.resetSeries());
+    this.ngZone.runOutsideAngular(() => this._chartObj.resetSeries());
   }
 
   public zoomX(min: number, max: number) {
-    this.ngZone.runOutsideAngular(() => this.chartObj.zoomX(min, max));
+    this.ngZone.runOutsideAngular(() => this._chartObj.zoomX(min, max));
   }
 
   public toggleDataPointSelection(
     seriesIndex: number,
     dataPointIndex?: number
   ) {
-    this.ngZone.runOutsideAngular(() => this.chartObj.toggleDataPointSelection(seriesIndex, dataPointIndex));
+    this.ngZone.runOutsideAngular(() =>
+      this._chartObj.toggleDataPointSelection(seriesIndex, dataPointIndex)
+    );
   }
 
   public destroy() {
-    this.chartObj.destroy();
+    this._chartObj.destroy();
   }
 
   public setLocale(localeName?: string) {
-    this.ngZone.runOutsideAngular(() => this.chartObj.setLocale(localeName));
+    this.ngZone.runOutsideAngular(() => this._chartObj.setLocale(localeName));
   }
 
   public paper() {
-    this.ngZone.runOutsideAngular(() => this.chartObj.paper());
+    this.ngZone.runOutsideAngular(() => this._chartObj.paper());
   }
 
   public addXaxisAnnotation(
@@ -254,7 +138,9 @@ export class ChartComponent implements OnChanges, OnDestroy {
     pushToMemory?: boolean,
     context?: any
   ) {
-    this.ngZone.runOutsideAngular(() => this.chartObj.addXaxisAnnotation(options, pushToMemory, context));
+    this.ngZone.runOutsideAngular(() =>
+      this._chartObj.addXaxisAnnotation(options, pushToMemory, context)
+    );
   }
 
   public addYaxisAnnotation(
@@ -262,7 +148,9 @@ export class ChartComponent implements OnChanges, OnDestroy {
     pushToMemory?: boolean,
     context?: any
   ) {
-    this.ngZone.runOutsideAngular(() => this.chartObj.addYaxisAnnotation(options, pushToMemory, context));
+    this.ngZone.runOutsideAngular(() =>
+      this._chartObj.addYaxisAnnotation(options, pushToMemory, context)
+    );
   }
 
   public addPointAnnotation(
@@ -270,18 +158,24 @@ export class ChartComponent implements OnChanges, OnDestroy {
     pushToMemory?: boolean,
     context?: any
   ) {
-    this.ngZone.runOutsideAngular(() => this.chartObj.addPointAnnotation(options, pushToMemory, context));
+    this.ngZone.runOutsideAngular(() =>
+      this._chartObj.addPointAnnotation(options, pushToMemory, context)
+    );
   }
 
   public removeAnnotation(id: string, options?: any) {
-    this.ngZone.runOutsideAngular(() => this.chartObj.removeAnnotation(id, options));
+    this.ngZone.runOutsideAngular(() =>
+      this._chartObj.removeAnnotation(id, options)
+    );
   }
 
   public clearAnnotations(options?: any) {
-    this.ngZone.runOutsideAngular(() => this.chartObj.clearAnnotations(options));
+    this.ngZone.runOutsideAngular(() =>
+      this._chartObj.clearAnnotations(options)
+    );
   }
 
   public dataURI(options?: any): Promise<{ imgURI: string }> {
-    return this.chartObj.dataURI(options);
+    return this._chartObj.dataURI(options);
   }
 }
