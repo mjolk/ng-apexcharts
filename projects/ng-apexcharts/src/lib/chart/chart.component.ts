@@ -45,14 +45,17 @@ import ApexCharts from "apexcharts/dist/apexcharts.esm.js";
 export class ChartComponent implements OnDestroy, AfterViewInit {
   @Input() set options(options: ApexOptions | null) {
     if (!options) return;
+    console.log({ setoptions: options });
     this._options = options;
-    this.ngZone.runOutsideAngular(() => {
-      if (!this._chartObj) {
-        this._create();
-        return;
-      }
-      this._chartObj.updateOptions(this._options, true, true, false);
-    });
+    asapScheduler.schedule(() =>
+      this.ngZone.runOutsideAngular(() => {
+        if (!this._chartObj) {
+          return;
+        }
+        console.debug({ updateoptions: this._options });
+        this._chartObj.updateOptions(this._options, true, true);
+      })
+    );
   }
   get options(): ApexOptions | null {
     return this._options;
@@ -83,99 +86,11 @@ export class ChartComponent implements OnDestroy, AfterViewInit {
   }
 
   private _create() {
+    console.debug({ createchart: this._options });
     this._chartObj = new ApexCharts(
       this.chartElement.nativeElement,
       this._options
     );
     this._chartObj.render();
-  }
-
-  public toggleSeries(seriesName: string): any {
-    return this.ngZone.runOutsideAngular(() =>
-      this._chartObj.toggleSeries(seriesName)
-    );
-  }
-
-  public showSeries(seriesName: string) {
-    this.ngZone.runOutsideAngular(() => this._chartObj.showSeries(seriesName));
-  }
-
-  public hideSeries(seriesName: string) {
-    this.ngZone.runOutsideAngular(() => this._chartObj.hideSeries(seriesName));
-  }
-
-  public resetSeries() {
-    this.ngZone.runOutsideAngular(() => this._chartObj.resetSeries());
-  }
-
-  public zoomX(min: number, max: number) {
-    this.ngZone.runOutsideAngular(() => this._chartObj.zoomX(min, max));
-  }
-
-  public toggleDataPointSelection(
-    seriesIndex: number,
-    dataPointIndex?: number
-  ) {
-    this.ngZone.runOutsideAngular(() =>
-      this._chartObj.toggleDataPointSelection(seriesIndex, dataPointIndex)
-    );
-  }
-
-  public destroy() {
-    this._chartObj.destroy();
-  }
-
-  public setLocale(localeName?: string) {
-    this.ngZone.runOutsideAngular(() => this._chartObj.setLocale(localeName));
-  }
-
-  public paper() {
-    this.ngZone.runOutsideAngular(() => this._chartObj.paper());
-  }
-
-  public addXaxisAnnotation(
-    options: any,
-    pushToMemory?: boolean,
-    context?: any
-  ) {
-    this.ngZone.runOutsideAngular(() =>
-      this._chartObj.addXaxisAnnotation(options, pushToMemory, context)
-    );
-  }
-
-  public addYaxisAnnotation(
-    options: any,
-    pushToMemory?: boolean,
-    context?: any
-  ) {
-    this.ngZone.runOutsideAngular(() =>
-      this._chartObj.addYaxisAnnotation(options, pushToMemory, context)
-    );
-  }
-
-  public addPointAnnotation(
-    options: any,
-    pushToMemory?: boolean,
-    context?: any
-  ) {
-    this.ngZone.runOutsideAngular(() =>
-      this._chartObj.addPointAnnotation(options, pushToMemory, context)
-    );
-  }
-
-  public removeAnnotation(id: string, options?: any) {
-    this.ngZone.runOutsideAngular(() =>
-      this._chartObj.removeAnnotation(id, options)
-    );
-  }
-
-  public clearAnnotations(options?: any) {
-    this.ngZone.runOutsideAngular(() =>
-      this._chartObj.clearAnnotations(options)
-    );
-  }
-
-  public dataURI(options?: any): Promise<{ imgURI: string }> {
-    return this._chartObj.dataURI(options);
   }
 }
