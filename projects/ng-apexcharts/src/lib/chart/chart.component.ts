@@ -45,7 +45,6 @@ import ApexCharts from "apexcharts/dist/apexcharts.esm.js";
 export class ChartComponent implements OnDestroy, AfterViewInit {
   @Input() set options(options: ApexOptions | null) {
     if (!options) return;
-    console.log({ setoptions: options });
     this._options = options;
     asapScheduler.schedule(() =>
       this.ngZone.runOutsideAngular(() => {
@@ -86,7 +85,6 @@ export class ChartComponent implements OnDestroy, AfterViewInit {
   }
 
   private _create() {
-    console.debug({ createchart: this._options });
     this._chartObj = new ApexCharts(
       this.chartElement.nativeElement,
       this._options
